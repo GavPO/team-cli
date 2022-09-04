@@ -1,7 +1,3 @@
-DELETE FROM department;
-DELETE FROM employee_role;
-DELETE FROM employee;
-
 INSERT INTO department (department_name)
 VALUES
     ( "Sales" ),
@@ -20,7 +16,7 @@ VALUES
     ( "Lawyer", 190000, 4 ),
     ( "Legal Team Lead", 250000, 4 );
 
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
+INSERT INTO employees (first_name, last_name, role_id, manager_id)
 VALUES
     ( "Wil", "Villarreal", 2, NULL ),
     ( "Gracie", "Blake", 1, 1 ),
