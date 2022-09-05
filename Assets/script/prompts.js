@@ -43,11 +43,12 @@ function loadCLI() {
         };
 };
 
-mainMenuPrompt();
+    mainMenuPrompt();
 };
 
 function viewDepartments() {
-    db.query(``, function (err, results) {
+    db.query(`SELECT department.department_name AS department
+        FROM department`, function (err, results) {
         if (err) {
         console.log(err);
         };
@@ -57,7 +58,9 @@ function viewDepartments() {
 };
 
 function viewRoles() {
-    db.query(``, function (err, results) {
+    db.query(`SELECT employee_role.role_title AS role,
+        employee_role.role_salary AS salary
+        FROM employee_role`, function (err, results) {
         if (err) {
         console.log(err);
         };
@@ -69,10 +72,13 @@ function viewRoles() {
 function viewEmployees() {
     db.query(`SELECT employees.first_name AS first,
         employees.last_name AS last,
-        employee_role.role_title AS role
+        employee_role.role_title AS department,
+        employee_role.role_salary AS salary,
+        employees.manager_id AS manager
         FROM employees
         INNER JOIN employee_role
-        ON employees.role_id = employee_role.id`, function (err, results) {
+        ON employees.role_id = employee_role.id
+       `, function (err, results) {
         if (err) {
         console.log(err);
         } else {
