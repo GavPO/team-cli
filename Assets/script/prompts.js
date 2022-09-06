@@ -77,10 +77,12 @@ function viewEmployees() {
         employees.last_name AS last,
         employee_role.role_title AS department,
         employee_role.role_salary AS salary,
-        employees.manager_id AS manager
+        em.first_name AS manager
         FROM employees
         INNER JOIN employee_role
-        ON employees.role_id = employee_role.id`, function (err, results) {
+        ON employees.role_id = employee_role.id
+        LEFT JOIN employees em
+        ON employees.manager_id = em.id`, function (err, results) {
         if (err) {
         console.log(err);
         } else {
@@ -88,6 +90,36 @@ function viewEmployees() {
             loadCLI();
         };
     });
+    // db.query(`WITH RECURSIVE Emp_CTE (id, first, last, manager, manager_name)
+    // AS (
+    //     SELECT employees.id AS id,
+    //     employees.first_name AS first, 
+    //     employees.last_name AS last,
+    //     employees.manager_id AS manager,
+    //     cast(NULL as CHAR(30))
+    //     FROM employees
+    //     WHERE employees.manager_id IS NULL
+    //     UNION ALL
+    //         SELECT e.id, e.first_name, e.last_name , e.manager_id, Emp_CTE.first
+    //         FROM employees e
+    //         INNER JOIN Emp_CTE
+    //         ON Emp_CTE.id = e.manager_id
+    //     )
+    // SELECT first,
+    // last,
+    // employee_role.role_title AS role,
+    // employee_role.role_salary AS salary,
+    // manager_name
+    // FROM Emp_CTE
+    // INNER JOIN employee_role
+    // ON Emp_CTE.id = employee_role.id`, function (err, results) {
+    // if (err) {
+    // console.log(err);
+    // } else {
+    //     console.table(results);
+    //     loadCLI();
+    // };
+    // });
 };
 
 function addDepartment() {
@@ -211,7 +243,6 @@ function updateEmployeeRole() {
     function runUpdateQuery(changeRolePrompt) {
         const nameStr = changeRolePrompt.empSel
         const nameArr = nameStr.split(" ");
-        console.log(roleIndex);
         db.query(`UPDATE employees
         SET role_id = ?
         WHERE employees.first_name = ? AND employees.last_name = ?`, [roleIndex, nameArr[0], nameArr[1]], function (err, results) {
