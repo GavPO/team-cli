@@ -13,7 +13,7 @@ This app was built to help clients store data more effectively, and have a clean
 
 ## Installation
 
-Install all of the required files, and install all of the dependecies. After installing all of the files, run the index.js file.
+Install all of the required files, and install all of the dependecies. After installing all of the files run the schema and seeds.sql files, and then run the index.js file.
 
 ## Usage
 
