@@ -17,6 +17,7 @@ const db = mysql.createConnection(
 function loadCLI() {
     const empArr = [];
     const roleArrName = [];
+    const manArr = [];
     
     async function mainMenuPrompt() {
         let mainPrompt = await inquirer
@@ -186,7 +187,7 @@ function loadCLI() {
                 {
                 type: "input",
                 name: "empLastName",
-                message: "What is the last name of the"
+                message: "What is the last name of the new employee?"
                 },
                 {
                 type: "list",
@@ -194,16 +195,30 @@ function loadCLI() {
                 message: "What role is the employee going to be?",
                 choices: roleArrName
                 },
-    
+                {
+                type: "list",
+                name: "manSel",
+                message: "Who is the employee's manager going to be?",
+                choices: manArr
+                }
             ]);
-        }
-        db.query(``, function (err, results) {
-            if (err) {
-            console.log(err);
-            };
-            console.table(results);
-            loadCLI();
-        });
+            runEmployeeQuery(newEmployeePrompt);
+        };
+
+        async function runEmployeeQuery(prompt) {
+            let theRoleIndex = await getIndex(prompt);
+            let managerId = await getManagerID(prompt);
+            db.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id)
+            VALUES
+                ( "${prompt.empFirstName}", "${prompt.empLastName}", ${theRoleIndex}, ${managerId} )`, function (err, results) {
+                if (err) {
+                console.log(err);
+                };
+                viewEmployees();
+            });
+        };
+
+        newEmployee();
     };
 
     function updateEmployeeRole() {
@@ -230,16 +245,27 @@ function loadCLI() {
         async function runUpdateQuery(changeRolePrompt) {   
             const nameStr = changeRolePrompt.empSel
             const nameArr = nameStr.split(" ");
-            const theIndex = await getIndex(changeRolePrompt);
 
-            db.query(`UPDATE employees
-            SET role_id = ?
-            WHERE employees.first_name = ? AND employees.last_name = ?`, [theIndex, nameArr[0], nameArr[1]], function (err, results) {
-                if (err) {
-                console.log(err);
-                };
-                loadCLI();
-            });
+            async function getUpdateArr(names) {
+                const updateArr = [];
+                const theIndex = await getIndex(names);
+                updateArr.push(theIndex, nameArr[0], nameArr[1]);
+                runDBQuery(updateArr);
+            };
+
+            function runDBQuery(queryArr) {
+                db.query(`UPDATE employees
+                SET role_id = ?
+                WHERE employees.first_name = ?
+                AND employees.last_name = ?`, queryArr , function (err, results) {
+                    if (err) {
+                    console.log(err);
+                    };
+                    viewEmployees();
+                });
+            };
+
+            getUpdateArr(changeRolePrompt);
         };
 
         changeRole();
@@ -276,38 +302,58 @@ function loadCLI() {
         });
     };
 
+    function setManArr() {
+        db.query(`SELECT employees.first_name AS first,
+        employees.last_name AS last
+        FROM employees
+        WHERE manager_id IS NULL`, 
+        function (err, results) {
+            if (err) {
+                console.log(err);
+            };
+            results.forEach(el => {
+                let currentMan = "";
+                currentMan += el.first + " " + el.last;
+                manArr.push(currentMan);
+            });
+        });
+    }
+
     async function getIndex(prompt) {
-        let roleIndex;
-        db.query(`SELECT employee_role.id AS roleid
-        FROM employee_role
-        WHERE role_title = ?`, prompt.roleSel, function (err, results) {
+        return new Promise (function(resolve) {
+            db.query(`SELECT employee_role.id AS roleid
+            FROM employee_role
+            WHERE role_title = ?`, prompt.roleSel, function (err, results) {
             if (err) {
             console.log(err);
             };
-            roleIndex = results[0].roleid;
-            console.log(roleIndex);
-            return roleIndex;
+            const roleIndex = results[0].roleid;
+            resolve(roleIndex);
+            });
+        });
+    };
+
+    async function getManagerID(prompt) {
+        const manName = prompt.manSel.split(" ");
+        return new Promise(function(resolve) {
+            db.query(`SELECT employees.id
+            FROM employees
+            WHERE first_name = ?
+            AND last_name = ?`, manName, function (err, results) {
+            if (err) {
+            console.log(err);
+            };
+            const roleId = results[0].id;
+            resolve(roleId);
+            });
         });
     };
 
     setEmpArr();
     setRoleArr();
+    setManArr();
     mainMenuPrompt();
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 module.exports = { loadCLI }
